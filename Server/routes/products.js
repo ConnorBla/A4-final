@@ -1,6 +1,5 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
-import multer from 'multer';
 import cors from 'cors';
 
 const router = express.Router();
@@ -8,27 +7,19 @@ const prisma = new PrismaClient({
     log: ['query', 'info', 'warn', 'error']
 });
 
-router.use(cors());
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'public/images/'); // save uploaded files in `public/images` folder
-    },
-
-    filename: function (req, file, cb) {
-        const ext = file.originalname.split('.').pop();// get file extension
-        const uniqueFilename = Date.now() + '-' + Math.round(Math.random() * 1000) + '.' + ext; // generate unique filename - current timestamp + random number between 0 and 1000.
-        cb(null, uniqueFilename);
+router.use(cors(
+    {
+        credentials: true
     }
-});
+));
 
-const upload = multer({ storage: storage });
 
 router.post('/get', async (req, res) => {
 
     const products = await prisma.product.findMany({
         orderBy: {
-            name: "asc"
+            name: "desc"
         }
     });
 
@@ -40,7 +31,7 @@ router.post('/getByID', async (req, res) => {
     const { id } = req.body;
 
     if (!id) {
-        return res.status(400).send('ID is required');
+        return res.status(400).send('ID is required to get product by ID');
     }
 
     const product = await prisma.product.findUnique({
@@ -50,7 +41,7 @@ router.post('/getByID', async (req, res) => {
     });
 
     if (!product) {
-        return res.status(400).send('Product not found');
+        return res.status(404).send('Product not found');
     }
 
     res.json(product);
@@ -74,45 +65,66 @@ router.post('/getByName', async (req, res) => {
     });
 
     if (!product) {
-        return res.status(400).send('Product not found');
+        return res.status(404).send('Product not found');
     }
 
     res.json(product);
 
 })
 
-router.post('/create', upload.single('image'), async (req, res) => {
 
-    const { name, price, description } = req.body;
-    const imageFileName = req.file ? req.file.filename : null;
 
-    if (!(name && price && description)) {
-        unlink(imageFileName);
-        return res.status(400).send('All fields are required');
+router.post('/purchase', async (req, res) => {
+    if(!req.session.userId){
+      return res.status(401).send('User is not logged in');
     }
+  
+    const {street, city, province, country, postalCode, cart,
+       creditCardNumber, creditCardExpiry, creditCardCVC, invoiceSubtotal, invoiceTax, invoiceTotal} = req.body;
+  
+    const cartItemsCount = cart.split(',').reduce((acc, item) => {
+        acc[item] = (acc[item] || 0) + 1; // Increment count or initialize to 1
+        return acc;
+    }, {});
 
-    const product = await prisma.product.create({
-        data: 
-        {
-            name: name,
-            price: price,
-            description: description,
-            imageFileName: imageFileName
-        }
+    console.log(cartItemsCount);
+  
+    if (!(street && city && province && country && postalCode 
+        && creditCardNumber && creditCardExpiry && creditCardCVC
+        && invoiceSubtotal && invoiceTax && invoiceTotal)) {
+      return res.status(400).send('All fields are required');
+    }
+    
+    const purchase = await prisma.purchase.create({
+      data: {
+        street: street,
+        city: city,
+        province: province,
+        country: country,
+        postalCode: postalCode,
+        creditCardNumber: creditCardNumber,
+        creditCardExpiry: creditCardExpiry,
+        creditCardCVC: creditCardCVC,
+        invoiceSubtotal: invoiceSubtotal,
+        invoiceTax: invoiceTax,
+        invoiceTotal: invoiceTotal,
+        customerId: 1
+      }
     });
+  
+    //for each item in cartCount, create a purchaseItem with the product id and quantity and the purchase id
+    await Promise.all(Object.entries(cartItemsCount).map(([productId, quantity]) => {
+      return prisma.purchaseItem.create({
+        data: {
+          quantity: quantity,
+          productId: parseInt(productId),
+          purchaseId: purchase.purchaseId
+        }
+      });
+    }));
+    
 
-    res.json(product);
-})
-
-function unlink(fileName) {
-    if (fileName) 
-        {
-        fs.unlinkSync(`public/images/${fileName}`);
-    } else 
-    {
-        console.log("No file to delete");
-    }
-}
-
+    return res.status(200).send('Purchase successful');
+  });
 
 export default router;

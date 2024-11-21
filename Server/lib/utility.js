@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import passwordValidator from 'password-validator';
 
 async function hashPassword(password) {
  const hash = await bcrypt.hash(password, 10);
@@ -11,4 +12,22 @@ async function comparePassword(password, hash){
     return result;
 }
 
-export {hashPassword, comparePassword};
+async function adheresToPasswordPolicy(password, options) {
+    const schema = new passwordValidator();
+
+    // Add properties to it
+    schema
+    .is().min(8)
+    .has().uppercase(1)
+    .has().lowercase(1)
+    .has().digits(1)
+    .has().not().spaces()
+
+    if(options == true){
+     return schema.validate(password, {details: true});   
+    }
+
+    return schema.validate(password);
+}
+
+export {hashPassword, comparePassword, adheresToPasswordPolicy};

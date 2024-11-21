@@ -27,3 +27,28 @@ model product {
   description  String
   imageFileName String
 }
+
+model purchase {
+  purchaseId Int @id @default(autoincrement())
+  customerId Int 
+  street String
+  city String
+  province String
+  country String
+  postalCode String
+  creditCardNumber String
+  creditCardExpiry String
+  creditCardCVC String
+  invoiceSubtotal String
+  invoiceTax String
+  invoiceTotal String
+  orderDate DateTime @default(now())
+}
+
+model purchaseItem {
+  purchaseId Int 
+  productId Int 
+  quantity Int
+
+  @@id([purchaseId, productId]) // composite primary key
+}

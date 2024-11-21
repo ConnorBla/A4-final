@@ -1,8 +1,8 @@
 import express from 'express';
 import cors from 'cors';
-import homeRouter from './routes/home';
-import usersRouter from "./routes/users"
-import productsRouter from "./routes/products"
+// import homeRouter from './routes/home';
+import usersRouter from "./routes/users.js"
+import productsRouter from "./routes/products.js"
 import session from 'express-session';
 
 const port = process.env.PORT || 3000;
@@ -14,7 +14,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
 app.use(cors({
-  origin: 'http://localhost:5173',  //react client url
   credentials: true                 //allow cookies from client
 }));
 
@@ -31,8 +30,7 @@ app.use(session({
 }))
 
 // routes
-app.use('/api/',         homeRouter);
-
+// app.use('/api/',         homeRouter);
 app.use('/api/users',    usersRouter);
 app.use('/api/products', productsRouter)
 
