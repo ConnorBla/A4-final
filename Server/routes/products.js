@@ -9,34 +9,33 @@ const prisma = new PrismaClient({
 
 
 router.use(cors(
-    {
-        credentials: true
-    }
+    // {
+    //     credentials: true
+    // }
 ));
 
 
-router.post('/get', async (req, res) => {
+router.get('/get', async (req, res) => {
 
     const products = await prisma.product.findMany({
-        orderBy: {
-            name: "desc"
-        }
     });
 
     res.json(products);
 })
 
-router.post('/getByID', async (req, res) => {
+router.get('/getByID', async (req, res) => {
 
-    const { id } = req.body;
+    let { id } = req.body;
 
     if (!id) {
         return res.status(400).send('ID is required to get product by ID');
     }
 
+    const prodId = parseInt(id);
+
     const product = await prisma.product.findUnique({
         where: {
-            id: id
+            id: prodId
         }
     });
 
@@ -48,7 +47,7 @@ router.post('/getByID', async (req, res) => {
 
 })
 
-router.post('/getByName', async (req, res) => {
+router.get('/getByName', async (req, res) => {
 
     const { name } = req.body;
 
@@ -57,10 +56,13 @@ router.post('/getByName', async (req, res) => {
         return res.status(400).send('Name is required');
     }
 
-    const product = await prisma.product.findUnique({
+    const product = await prisma.product.findMany({
         where: 
-        {
-            name: name
+        { 
+            name: 
+            {
+                contains: name
+            }
         }
     });
 
@@ -72,22 +74,21 @@ router.post('/getByName', async (req, res) => {
 
 })
 
-
-
 router.post('/purchase', async (req, res) => {
     if(!req.session.userId){
       return res.status(401).send('User is not logged in');
     }
   
     const {street, city, province, country, postalCode, cart,
-       creditCardNumber, creditCardExpiry, creditCardCVC, invoiceSubtotal, invoiceTax, invoiceTotal} = req.body;
+       creditCardNumber, creditCardExpiry, creditCardCVC, invoiceSubtotal,
+       invoiceTax, invoiceTotal} = req.body;
   
     const cartItemsCount = cart.split(',').reduce((acc, item) => {
-        acc[item] = (acc[item] || 0) + 1; // Increment count or initialize to 1
+        acc[item] = (acc[item] || 0) + 1;
         return acc;
     }, {});
 
-    console.log(cartItemsCount);
+    // console.log(cartItemsCount);
   
     if (!(street && city && province && country && postalCode 
         && creditCardNumber && creditCardExpiry && creditCardCVC
@@ -108,23 +109,29 @@ router.post('/purchase', async (req, res) => {
         invoiceSubtotal: invoiceSubtotal,
         invoiceTax: invoiceTax,
         invoiceTotal: invoiceTotal,
-        customerId: 1
+        customerId: req.session.userId
       }
     });
-  
-    //for each item in cartCount, create a purchaseItem with the product id and quantity and the purchase id
-    await Promise.all(Object.entries(cartItemsCount).map(([productId, quantity]) => {
-      return prisma.purchaseItem.create({
-        data: {
-          quantity: quantity,
-          productId: parseInt(productId),
-          purchaseId: purchase.purchaseId
-        }
-      });
-    }));
-    
 
-    return res.status(200).send('Purchase successful');
-  });
+    //i dont think this is an issue, but what about race conditions? 
+    //should i set a .then or something?
+
+    //for each item in cartCount, create a purchaseItem with the product id and the quantity and the purchase id
+    //promise all means it will wait for all of them to finish before returning
+    const receipt = await Promise.all(Object.entries(cartItemsCount).map(([productId, quantity]) => {
+        return prisma.purchaseItem.create({
+            data: {
+                quantity: parseInt(quantity),
+                productId: parseInt(productId),
+                purchaseId: parseInt(purchase.id)
+            }
+        });
+    }));
+
+    console.log(receipt);
+    return res.status(200).send('Purchase successful! -- id: ' + purchase.id );
+});
+
+
 
 export default router;

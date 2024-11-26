@@ -117,10 +117,10 @@ router.post('/session', async (req, res) => {
     return res.status(401).send('User is not logged in');
   }
 
-  res.json({"customerId"        : req.session.userId,
-            "customerEmail"     : req.session.userEmail,
-            "customerFirstName" : req.session.userFirstName,
-            "customerLastName"  : req.session.userLastName
+  res.json({"id"        : req.session.userId,
+            "email"     : req.session.userEmail,
+            "firstName" : req.session.userFirstName,
+            "lastName"  : req.session.userLastName
   });
 })
 

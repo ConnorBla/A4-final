@@ -29,7 +29,7 @@ model product {
 }
 
 model purchase {
-  purchaseId Int @id @default(autoincrement())
+  id Int @id @default(autoincrement())
   customerId Int 
   street String
   city String
