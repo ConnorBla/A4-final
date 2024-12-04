@@ -23,9 +23,9 @@ router.get('/get', async (req, res) => {
     res.json(products);
 })
 
-router.get('/getByID', async (req, res) => {
+router.get('/getByID/:id', async (req, res) => {
 
-    let { id } = req.body;
+    const id  = req.params.id;
 
     if (!id) {
         return res.status(400).send('ID is required to get product by ID');
@@ -45,7 +45,7 @@ router.get('/getByID', async (req, res) => {
 
     res.json(product);
 
-})
+});
 
 router.get('/getByName', async (req, res) => {
 
