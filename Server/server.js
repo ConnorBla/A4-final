@@ -14,13 +14,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
 app.use(cors({
-  credentials: true                 //allow cookies from client
+  credentials: true
 }));
 
 app.use(session({
   secret: '^hh!SLAo5jf3Gx%$678',
   resave: false,
-  saveUninitialized: true,
+  saveUninitialized: false,
   cookie: {
     httpOnly: true,
     secure: false,
@@ -29,8 +29,6 @@ app.use(session({
   }
 }))
 
-// routes
-// app.use('/api/',         homeRouter);
 app.use('/api/users',    usersRouter);
 app.use('/api/products', productsRouter)
 

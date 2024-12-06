@@ -13,7 +13,6 @@ export default function Cart() {
         const productIds = cookies.cart.split(',');
         const productCountMap = new Map();
 
-        // Count the occurrences of each product ID
         productIds.forEach(id => {
           if (productCountMap.has(id)) {
             productCountMap.set(id, productCountMap.get(id) + 1);
@@ -22,7 +21,6 @@ export default function Cart() {
           }
         });
 
-        // Fetch the product details for each unique product ID
         const productDetails = await Promise.all([...productCountMap.keys()].map(async (id) => {
           const response = await fetch(`${import.meta.env.VITE_PROD_GET_PROD_BY_ID}${id}`);
           const product = await response.json();
@@ -35,7 +33,6 @@ export default function Cart() {
         setCartItems(productDetails);
       }
     };
-
 
     fetchCartItems();
   }, [cookies.cart]);
@@ -81,17 +78,17 @@ export default function Cart() {
             ))}
           </div>
           <div className="row justify-content-end">
-              <div className="col-12 col-md-4 d-flex flex-column align-items-end">
-                <h2 className="text-right">Grand Total: ${calculateTotal().toFixed(2)}</h2>
-                <div className="d-flex justify-content-between w-100">
-                  <a href="/Home" className="btn btn-primary mt-2 ml-2">
-                    Continue Shopping
-                  </a>
-                  <a href="/checkout" className="btn btn-primary mt-2 ml-2">
-                    Proceed to Checkout
-                  </a>
-                </div>
+            <div className="col-12 col-md-4 d-flex flex-column align-items-end">
+              <h2 className="text-right">Grand Total: ${calculateTotal().toFixed(2)}</h2>
+              <div className="d-flex justify-content-between w-100">
+                <a href="/Home" className="btn btn-primary mt-2 ml-2">
+                  Continue Shopping
+                </a>
+                <a href="/checkout" className="btn btn-primary mt-2 ml-2">
+                  Proceed to Checkout
+                </a>
               </div>
+            </div>
           </div>
         </div>
       )}

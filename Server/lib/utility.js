@@ -21,13 +21,8 @@ async function adheresToPasswordPolicy(password, options) {
     .has().uppercase(1)
     .has().lowercase(1)
     .has().digits(1)
-    .has().not().spaces()
-
-    if(options == true){
-     return schema.validate(password, {details: true});   
-    }
-
-    return schema.validate(password);
+    .has().not().spaces(0)
+return schema.validate(password, {details: true});   
 }
 
 export {hashPassword, comparePassword, adheresToPasswordPolicy};

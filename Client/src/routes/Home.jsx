@@ -10,11 +10,9 @@ export default function Home() {
       const products = await response.json();
       setProducts(products);
     }
-
     fetchProducts();
   }, []);
 
-  console.log(products);
   return (
     <div className="container my-4">
       <div className="row">

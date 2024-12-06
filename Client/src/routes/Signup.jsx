@@ -1,25 +1,42 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useOutletContext } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 export default function Signup() {
   const { register, handleSubmit, formState: { errors } } = useForm();
   const [apiErrors, setApiErrors] = useState({});
+  const { setIsLoggedIn } = useOutletContext();
 
   const onSubmit = async data => {
     try {
-      const response = await fetch('/api/signup', {
+      const response = await fetch(`${import.meta.env.VITE_USER_API + "signup"}`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify(data),
       });
       const result = await response.json();
       if (!response.ok) {
         setApiErrors(result.errors);
-        //show errors using react hook forms
+      }
+      else {
+        setApiErrors({});
+        const response = await fetch(`${import.meta.env.VITE_USER_API + "login"}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({"email ": data.email},{ "password": data.password}),
+        });
 
-      } else {
-        //successful signup
-          
+        const result = await response.json();
+        setIsLoggedIn(true);
+
+        // Redirect to home page and do everything else that needs to be done after login
+        window.location.href = '/';
+
       }
     } catch (error) {
       console.error('Error:', error);
